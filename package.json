@@ -1,0 +1,31 @@
+{
+  "name": "expenseflow-workshop",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ExpenseFlow - starter app for the Building with AI: AI-Assisted Engineering workshop",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:bug": "vitest run --config vitest.regression.config.js"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.1.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  }
+}
