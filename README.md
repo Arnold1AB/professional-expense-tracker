@@ -1,6 +1,6 @@
 # ExpenseFlow — Personal Expense & Budget Tracker
 
-ExpenseFlow is a small expense tracker built with **React** and **Vite**. It is the starter project for the **[Building with AI: From Idea to Application](https://github.com/IAMebonyhope/building-with-ai-workshop)** workshop. In the workshop you will use an AI coding agent, such as GitHub Copilot, to explore this codebase, debug an issue, and build a new feature.
+ExpenseFlow is a small expense tracker built with **React** and **Vite**. It is the starter project for the **[Building with AI: AI-Assisted Engineering](https://github.com/IAMebonyhope/building-with-ai-workshop)** workshop. In the workshop you will use an AI coding agent, such as GitHub Copilot, to explore this codebase, debug an issue, and build a new feature.
 
 Everything runs in your browser. There is no backend, no login, and no API keys. Your data is saved in the browser's `localStorage`.
 
