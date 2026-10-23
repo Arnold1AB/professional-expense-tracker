@@ -2,12 +2,19 @@ import { useState } from 'react';
 import { getCategorySummaries } from '../utils/expenseCalculations.js';
 import { formatCurrency } from '../utils/formatters.js';
 
-function CategoryBudgets({ categories, expenses, onUpdateBudget }) {
+function CategoryBudgets({ categories, expenses, onUpdateBudget, onTransferBudget }) {
   const [editingId, setEditingId] = useState(null);
   const [draftBudget, setDraftBudget] = useState('');
   const [error, setError] = useState('');
+  const [fromCategoryId, setFromCategoryId] = useState('');
+  const [toCategoryId, setToCategoryId] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferError, setTransferError] = useState('');
+  const [transferMessage, setTransferMessage] = useState('');
 
   const categorySummaries = getCategorySummaries(categories, expenses);
+  const selectedSource = categorySummaries.find((category) => category.id === fromCategoryId);
+  const availableFunds = Math.max(0, selectedSource?.remaining ?? 0);
 
   function startEditing(category) {
     setEditingId(category.id);
@@ -32,6 +39,36 @@ function CategoryBudgets({ categories, expenses, onUpdateBudget }) {
     cancelEditing();
   }
 
+  function submitTransfer(event) {
+    event.preventDefault();
+    const amount = Number(transferAmount);
+    const roundedAmount = Math.round(amount * 100) / 100;
+    const source = categorySummaries.find((category) => category.id === fromCategoryId);
+    const destination = categorySummaries.find((category) => category.id === toCategoryId);
+
+    if (!source || !destination || source.id === destination.id) {
+      setTransferError('Choose different source and destination categories.');
+      return;
+    }
+    if (
+      !Number.isFinite(amount) ||
+      roundedAmount <= 0 ||
+      roundedAmount > Math.max(0, source.remaining)
+    ) {
+      setTransferError('Enter an amount greater than 0 and no more than the source category’s available funds.');
+      return;
+    }
+
+    onTransferBudget(source.id, destination.id, roundedAmount);
+    setTransferMessage(
+      `Transferred ${formatCurrency(roundedAmount)} from ${source.name} to ${destination.name}.`
+    );
+    setFromCategoryId('');
+    setToCategoryId('');
+    setTransferAmount('');
+    setTransferError('');
+  }
+
   return (
     <section className="section" aria-labelledby="categories-heading">
       <h2 id="categories-heading" className="section__title">
@@ -52,6 +89,7 @@ function CategoryBudgets({ categories, expenses, onUpdateBudget }) {
               <th scope="col" className="num">
                 Remaining
               </th>
+              <th scope="col">Budget Status</th>
               <th scope="col">
                 <span className="visually-hidden">Actions</span>
               </th>
@@ -113,9 +151,32 @@ function CategoryBudgets({ categories, expenses, onUpdateBudget }) {
                   </td>
                   <td className="num" data-label="Spent">
                     {formatCurrency(category.spent)}
+                    <progress
+                      className={`budget-progress budget-progress--${category.budgetStatus}`}
+                      max="100"
+                      value={Math.min(category.percentUsed, 100)}
+                      aria-label={`${category.name} budget used`}
+                      aria-valuetext={`${Math.round(category.percentUsed)}% of budget used`}
+                    />
+                    <span className="budget-progress__label">
+                      {Math.round(category.percentUsed)}% used
+                    </span>
                   </td>
                   <td className="num" data-label="Remaining">
                     {formatCurrency(category.remaining)}
+                  </td>
+                  <td data-label="Budget Status">
+                    {category.budgetStatus === 'over' ? (
+                      <span className="budget-status budget-status--over" role="alert">
+                        Over budget
+                      </span>
+                    ) : category.budgetStatus === 'warning' ? (
+                      <span className="budget-status budget-status--warning" role="status">
+                        Approaching budget
+                      </span>
+                    ) : (
+                      <span className="budget-status">On track</span>
+                    )}
                   </td>
                   <td className="actions">
                     {!isEditing && (
@@ -134,6 +195,85 @@ function CategoryBudgets({ categories, expenses, onUpdateBudget }) {
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="card budget-transfer">
+        <h3 className="card__title">Move Budget Between Categories</h3>
+        <form className="budget-transfer__form" onSubmit={submitTransfer} noValidate>
+          <div className="form-field">
+            <label htmlFor="transfer-from">From category</label>
+            <select
+              id="transfer-from"
+              value={fromCategoryId}
+              onChange={(event) => {
+                setFromCategoryId(event.target.value);
+                setTransferError('');
+                setTransferMessage('');
+              }}
+            >
+              <option value="">Choose a source</option>
+              {categorySummaries
+                .filter((category) => category.remaining > 0)
+                .map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+            </select>
+            {selectedSource && (
+              <span className="form-hint">
+                Available to move: {formatCurrency(availableFunds)}
+              </span>
+            )}
+          </div>
+          <div className="form-field">
+            <label htmlFor="transfer-to">To category</label>
+            <select
+              id="transfer-to"
+              value={toCategoryId}
+              onChange={(event) => {
+                setToCategoryId(event.target.value);
+                setTransferError('');
+                setTransferMessage('');
+              }}
+            >
+              <option value="">Choose a destination</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="transfer-amount">Transfer amount (₦)</label>
+            <input
+              id="transfer-amount"
+              type="number"
+              min="0.01"
+              max={availableFunds}
+              step="0.01"
+              inputMode="decimal"
+              value={transferAmount}
+              onChange={(event) => {
+                setTransferAmount(event.target.value);
+                setTransferError('');
+                setTransferMessage('');
+              }}
+            />
+          </div>
+          <button type="submit" className="btn btn--primary">
+            Transfer funds
+          </button>
+        </form>
+        {transferError && (
+          <p className="field-error budget-transfer__message" role="alert">
+            {transferError}
+          </p>
+        )}
+        <p className="form-status budget-transfer__message" role="status" aria-live="polite">
+          {transferMessage}
+        </p>
       </div>
     </section>
   );

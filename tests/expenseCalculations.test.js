@@ -68,9 +68,44 @@ describe('calculateCategoryRemaining', () => {
 describe('getCategorySummaries', () => {
   it('adds spent, remaining and expenseCount to each category', () => {
     expect(getCategorySummaries(categories, expenses)).toEqual([
-      { id: 'food', name: 'Food', budget: 100, spent: 42.75, remaining: 57.25, expenseCount: 2 },
-      { id: 'fun', name: 'Fun', budget: 50, spent: 60, remaining: -10, expenseCount: 1 },
+      {
+        id: 'food',
+        name: 'Food',
+        budget: 100,
+        spent: 42.75,
+        remaining: 57.25,
+        expenseCount: 2,
+        percentUsed: 42.75,
+        budgetStatus: 'ok',
+      },
+      {
+        id: 'fun',
+        name: 'Fun',
+        budget: 50,
+        spent: 60,
+        remaining: -10,
+        expenseCount: 1,
+        percentUsed: 120,
+        budgetStatus: 'over',
+      },
     ]);
+  });
+
+  it('warns at 80%, alerts at 100%, and recalculates status from current spending', () => {
+    const testCategories = [
+      { id: 'warning', name: 'Warning', budget: 100 },
+      { id: 'over', name: 'Over', budget: 100 },
+      { id: 'empty', name: 'Empty', budget: 0 },
+    ];
+    const testExpenses = [
+      { id: 'w', amount: 80, categoryId: 'warning' },
+      { id: 'o', amount: 100, categoryId: 'over' },
+      { id: 'e', amount: 1, categoryId: 'empty' },
+    ];
+
+    expect(getCategorySummaries(testCategories, testExpenses).map((category) => category.budgetStatus))
+      .toEqual(['warning', 'over', 'over']);
+    expect(getCategorySummaries(testCategories, testExpenses)[0].percentUsed).toBe(80);
   });
 
   it('does not modify the original categories', () => {

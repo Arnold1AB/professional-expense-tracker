@@ -13,17 +13,9 @@ export function calculateTotalBudget(categories) {
   return roundToCents(categories.reduce((total, category) => total + Number(category.budget), 0));
 }
 
-/** Sum of all recorded expenses. Each expense is only counted once. */
+/** Sum of all recorded expenses. */
 export function calculateTotalExpenses(expenses) {
-  const uniqueExpenses = new Map();
-  for (const expense of expenses) {
-    uniqueExpenses.set(expense.date, expense);
-  }
-
-  let total = 0;
-  for (const expense of uniqueExpenses.values()) {
-    total += Number(expense.amount);
-  }
+  const total = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   return roundToCents(total);
 }
 
@@ -51,12 +43,27 @@ export function calculateCategoryRemaining(category, expenses) {
  * and `expenseCount` values. Does not modify the input.
  */
 export function getCategorySummaries(categories, expenses) {
-  return categories.map((category) => ({
-    ...category,
-    spent: calculateCategorySpent(expenses, category.id),
-    remaining: calculateCategoryRemaining(category, expenses),
-    expenseCount: expenses.filter((expense) => expense.categoryId === category.id).length,
-  }));
+  return categories.map((category) => {
+    const spent = calculateCategorySpent(expenses, category.id);
+    const budget = Number(category.budget);
+    const percentUsed = budget > 0 ? (spent / budget) * 100 : spent > 0 ? 100 : 0;
+
+    return {
+      ...category,
+      spent,
+      remaining: roundToCents(budget - spent),
+      expenseCount: expenses.filter((expense) => expense.categoryId === category.id).length,
+      percentUsed,
+      budgetStatus:
+        budget <= 0
+          ? (spent > 0 ? 'over' : 'ok')
+          : percentUsed >= 100
+            ? 'over'
+            : percentUsed >= 80
+              ? 'warning'
+              : 'ok',
+    };
+  });
 }
 
 /** Returns a new array sorted by date, newest first (or oldest first). */

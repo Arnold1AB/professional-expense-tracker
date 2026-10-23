@@ -35,6 +35,26 @@ function App() {
     );
   }
 
+  function transferBudget(fromCategoryId, toCategoryId, amount) {
+    setCategories((current) =>
+      current.map((category) => {
+        if (category.id === fromCategoryId) {
+          return {
+            ...category,
+            budget: Math.round((Number(category.budget) - amount) * 100) / 100,
+          };
+        }
+        if (category.id === toCategoryId) {
+          return {
+            ...category,
+            budget: Math.round((Number(category.budget) + amount) * 100) / 100,
+          };
+        }
+        return category;
+      })
+    );
+  }
+
   function resetDemoData() {
     const confirmed = window.confirm(
       'Reset all data to the original demo data? Your added expenses and budget changes will be lost.'
@@ -56,6 +76,7 @@ function App() {
           categories={categories}
           expenses={expenses}
           onUpdateBudget={updateCategoryBudget}
+          onTransferBudget={transferBudget}
         />
 
         <section className="section" aria-labelledby="expenses-heading">

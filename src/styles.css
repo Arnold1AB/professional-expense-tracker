@@ -370,6 +370,88 @@ main.container {
   text-align: right;
 }
 
+.budget-progress {
+  display: block;
+  width: 120px;
+  height: 8px;
+  margin: 5px 0 2px auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  appearance: none;
+  background: #e9edf5;
+}
+
+.budget-progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: #e9edf5;
+}
+
+.budget-progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: var(--color-teal);
+}
+
+.budget-progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: var(--color-teal);
+}
+
+.budget-progress--warning::-webkit-progress-value {
+  background: var(--color-amber);
+}
+
+.budget-progress--warning::-moz-progress-bar {
+  background: var(--color-amber);
+}
+
+.budget-progress--over::-webkit-progress-value {
+  background: var(--color-danger);
+}
+
+.budget-progress--over::-moz-progress-bar {
+  background: var(--color-danger);
+}
+
+.budget-progress__label {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.budget-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.budget-status--warning {
+  color: var(--color-amber);
+}
+
+.budget-status--over {
+  color: var(--color-danger);
+}
+
+.budget-transfer {
+  margin-top: 18px;
+}
+
+.budget-transfer__form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.form-hint {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.budget-transfer__message {
+  margin-top: 10px;
+}
+
 /* ---------- Forms ---------- */
 
 .expenses-layout {
@@ -613,6 +695,19 @@ select[aria-invalid='true'] {
     width: 100%;
     text-align: left;
     padding-top: 8px;
+  }
+
+  .data-table td[data-label='Spent'] {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .data-table td[data-label='Spent']::before {
+    align-self: flex-start;
+  }
+
+  .budget-transfer__form {
+    grid-template-columns: 1fr;
   }
 
   .card__toolbar {
