@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { getCategorySummaries } from '../utils/expenseCalculations.js';
+import {
+  getCategorySummaries,
+  validateBudgetTransfer,
+} from '../utils/expenseCalculations.js';
 import { formatCurrency } from '../utils/formatters.js';
 
 function CategoryBudgets({ categories, expenses, onUpdateBudget, onTransferBudget }) {
@@ -41,27 +44,17 @@ function CategoryBudgets({ categories, expenses, onUpdateBudget, onTransferBudge
 
   function submitTransfer(event) {
     event.preventDefault();
-    const amount = Number(transferAmount);
-    const roundedAmount = Math.round(amount * 100) / 100;
     const source = categorySummaries.find((category) => category.id === fromCategoryId);
     const destination = categorySummaries.find((category) => category.id === toCategoryId);
-
-    if (!source || !destination || source.id === destination.id) {
-      setTransferError('Choose different source and destination categories.');
-      return;
-    }
-    if (
-      !Number.isFinite(amount) ||
-      roundedAmount <= 0 ||
-      roundedAmount > Math.max(0, source.remaining)
-    ) {
-      setTransferError('Enter an amount greater than 0 and no more than the source category’s available funds.');
+    const validation = validateBudgetTransfer(source, destination, transferAmount);
+    if (!validation.valid) {
+      setTransferError(validation.error);
       return;
     }
 
-    onTransferBudget(source.id, destination.id, roundedAmount);
+    onTransferBudget(source.id, destination.id, validation.amount);
     setTransferMessage(
-      `Transferred ${formatCurrency(roundedAmount)} from ${source.name} to ${destination.name}.`
+      `Transferred ${formatCurrency(validation.amount)} from ${source.name} to ${destination.name}.`
     );
     setFromCategoryId('');
     setToCategoryId('');

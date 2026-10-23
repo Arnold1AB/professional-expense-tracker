@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  calculateBudgetPercentage,
+  calculateBudgetStatus,
   calculateCategoryRemaining,
   calculateCategorySpent,
   calculateTotalBudget,
@@ -7,6 +9,7 @@ import {
   roundToCents,
   sortExpensesByCategory,
   sortExpensesByDate,
+  validateBudgetTransfer,
 } from '../src/utils/expenseCalculations.js';
 import {
   DEFAULT_CATEGORIES,
@@ -25,6 +28,41 @@ const expenses = [
   { id: 'e2', description: 'Dinner', amount: 30.25, categoryId: 'food', date: '2026-01-05' },
   { id: 'e3', description: 'Movie', amount: 60, categoryId: 'fun', date: '2026-01-04' },
 ];
+
+describe('calculateBudgetPercentage', () => {
+  it('calculates spending as a percentage of the budget', () => {
+    expect(calculateBudgetPercentage(80, 100)).toBe(80);
+    expect(calculateBudgetPercentage(125, 100)).toBe(125);
+  });
+
+  it('uses cent-rounded inputs and avoids dividing by zero', () => {
+    expect(calculateBudgetPercentage(79.999, 100)).toBe(80);
+    expect(calculateBudgetPercentage(0, 0)).toBe(0);
+    expect(calculateBudgetPercentage(1, 0)).toBe(100);
+  });
+});
+
+describe('calculateBudgetStatus', () => {
+  it('classifies exact 80% as warning and exact 100% as over budget', () => {
+    expect(calculateBudgetStatus(80, 100)).toBe('warning');
+    expect(calculateBudgetStatus(100, 100)).toBe('over');
+  });
+
+  it('uses cent-rounded amounts when classifying thresholds', () => {
+    expect(calculateBudgetStatus(79.999, 100)).toBe('warning');
+    expect(calculateBudgetStatus(99.999, 100)).toBe('over');
+  });
+
+  it('handles spending above budget and a zero budget without division', () => {
+    expect(calculateBudgetStatus(120, 100)).toBe('over');
+    expect(calculateBudgetStatus(0, 0)).toBe('ok');
+    expect(calculateBudgetStatus(0.01, 0)).toBe('over');
+  });
+
+  it('returns on track below the warning threshold', () => {
+    expect(calculateBudgetStatus(79.99, 100)).toBe('ok');
+  });
+});
 
 describe('calculateTotalBudget', () => {
   it('adds up all category budgets', () => {
@@ -112,6 +150,35 @@ describe('getCategorySummaries', () => {
     const copy = structuredClone(categories);
     getCategorySummaries(categories, expenses);
     expect(categories).toEqual(copy);
+  });
+});
+
+describe('validateBudgetTransfer', () => {
+  const source = { id: 'source', remaining: 25.5 };
+  const destination = { id: 'destination', remaining: 0 };
+
+  it('accepts a valid transfer and rounds it to cents', () => {
+    expect(validateBudgetTransfer(source, destination, '10.129')).toEqual({
+      valid: true,
+      amount: 10.13,
+    });
+  });
+
+  it.each(['', '   ', 'abc', '-1', '0', '0.001', '25.51'])(
+    'rejects invalid or unavailable transfer amount %j',
+    (amount) => {
+      expect(validateBudgetTransfer(source, destination, amount)).toMatchObject({
+        valid: false,
+        error: expect.any(String),
+      });
+    }
+  );
+
+  it('rejects transfers to the same category or from an over-budget category', () => {
+    expect(validateBudgetTransfer(source, source, 1)).toMatchObject({ valid: false });
+    expect(validateBudgetTransfer({ id: 'over', remaining: -5 }, destination, 1)).toMatchObject({
+      valid: false,
+    });
   });
 });
 

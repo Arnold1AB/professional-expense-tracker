@@ -168,6 +168,38 @@ describe('App', () => {
   });
 
   describe('category budgets', () => {
+    it('shows the warning at exactly 80% and the alert at exactly 100%', () => {
+      localStorage.setItem(
+        STORAGE_KEYS.categories,
+        JSON.stringify([
+          { id: 'warning', name: 'Warning Category', icon: '⚠️', budget: 100 },
+          { id: 'alert', name: 'Alert Category', icon: '🚨', budget: 100 },
+        ])
+      );
+      localStorage.setItem(
+        STORAGE_KEYS.expenses,
+        JSON.stringify([
+          { id: 'warning-expense', amount: 80, categoryId: 'warning', date: '2026-01-01' },
+          { id: 'alert-expense', amount: 100, categoryId: 'alert', date: '2026-01-01' },
+        ])
+      );
+      render(<App />);
+
+      const warningRow = getCategoryRow('Warning Category');
+      expect(within(warningRow).getByRole('status')).toHaveTextContent('Approaching budget');
+      expect(within(warningRow).getByRole('progressbar')).toHaveAttribute(
+        'aria-valuetext',
+        '80% of budget used'
+      );
+
+      const alertRow = getCategoryRow('Alert Category');
+      expect(within(alertRow).getByRole('alert')).toHaveTextContent('Over budget');
+      expect(within(alertRow).getByRole('progressbar')).toHaveAttribute(
+        'aria-valuetext',
+        '100% of budget used'
+      );
+    });
+
     it('shows live budget progress and threshold alerts', async () => {
       const user = userEvent.setup();
       render(<App />);
@@ -220,6 +252,53 @@ describe('App', () => {
       expect(screen.getByText(/no more than the source category’s available funds/)).toBeInTheDocument();
       expect(readStorage(STORAGE_KEYS.categories).find((category) => category.id === 'transportation').budget)
         .toBe(50000);
+    });
+
+    it('rejects transfers to the same category without changing budgets', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.selectOptions(screen.getByLabelText('From category'), 'transportation');
+      await user.selectOptions(screen.getByLabelText('To category'), 'transportation');
+      await user.type(screen.getByLabelText('Transfer amount (₦)'), '100');
+      await user.click(screen.getByRole('button', { name: 'Transfer funds' }));
+
+      expect(screen.getByText('Choose different source and destination categories.')).toBeInTheDocument();
+      expect(readStorage(STORAGE_KEYS.categories).find((category) => category.id === 'transportation').budget)
+        .toBe(50000);
+    });
+
+    it.each(['-1', '0', '0.001', ''])(
+      'rejects transfer amount %j without changing budgets',
+      async (amount) => {
+        const user = userEvent.setup();
+        render(<App />);
+
+        await user.selectOptions(screen.getByLabelText('From category'), 'transportation');
+        await user.selectOptions(screen.getByLabelText('To category'), 'food');
+        const amountInput = screen.getByLabelText('Transfer amount (₦)');
+        if (amount) {
+          await user.type(amountInput, amount);
+        }
+        await user.click(screen.getByRole('button', { name: 'Transfer funds' }));
+
+        expect(
+          screen.getByText(
+            'Enter an amount greater than 0 and no more than the source category’s available funds.'
+          )
+        ).toBeInTheDocument();
+        expect(readStorage(STORAGE_KEYS.categories).find((category) => category.id === 'transportation').budget)
+          .toBe(50000);
+      }
+    );
+
+    it('does not offer an over-budget category as a transfer source', () => {
+      render(<App />);
+
+      const sourceSelect = screen.getByLabelText('From category');
+      expect(within(sourceSelect).queryByRole('option', { name: 'Shopping' })).not.toBeInTheDocument();
+      expect(readStorage(STORAGE_KEYS.categories).find((category) => category.id === 'shopping').budget)
+        .toBe(30000);
     });
 
     it('updates a category budget and saves it', async () => {
