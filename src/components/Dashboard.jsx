@@ -1,4 +1,5 @@
 import SummaryCard from './SummaryCard.jsx';
+import SpendingInsights from './SpendingInsights.jsx';
 import {
   calculateRemainingBalance,
   calculateTotalBudget,
@@ -62,6 +63,8 @@ function Dashboard({ categories, expenses }) {
           ))}
         </ul>
       </div>
+
+      <SpendingInsights categories={categories} expenses={expenses} />
     </section>
   );
 }

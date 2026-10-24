@@ -5,6 +5,9 @@ import {
   calculateCategoryRemaining,
   calculateCategorySpent,
   calculateTotalBudget,
+  getMonthToDateCategorySpending,
+  getMonthlySpending,
+  getRecentCalendarMonths,
   getCategorySummaries,
   roundToCents,
   sortExpensesByCategory,
@@ -150,6 +153,96 @@ describe('getCategorySummaries', () => {
     const copy = structuredClone(categories);
     getCategorySummaries(categories, expenses);
     expect(categories).toEqual(copy);
+  });
+});
+
+describe('spending insight calculations', () => {
+  const insightCategories = [
+    { id: 'food', name: 'Food', icon: '🍽️' },
+    { id: 'travel', name: 'Travel', icon: '🚗' },
+  ];
+
+  it('generates recent months oldest first across a year boundary', () => {
+    expect(getRecentCalendarMonths(new Date(2026, 0, 15)).map((month) => month.key)).toEqual([
+      '2025-08',
+      '2025-09',
+      '2025-10',
+      '2025-11',
+      '2025-12',
+      '2026-01',
+    ]);
+  });
+
+  it('groups month-to-date spending and excludes past, future, and invalid records', () => {
+    const result = getMonthToDateCategorySpending(
+      [
+        { amount: 10, categoryId: 'food', date: '2026-01-01' },
+        { amount: 0.1, categoryId: 'food', date: '2026-01-15' },
+        { amount: 20, categoryId: 'missing', date: '2026-01-15' },
+        { amount: 30, categoryId: 'travel', date: '2026-01-16' },
+        { amount: 40, categoryId: 'food', date: '2025-12-31' },
+        { amount: 50, categoryId: 'food', date: '2026-02-01' },
+        { amount: 60, categoryId: 'food', date: '2026-01-32' },
+        { amount: Number.NaN, categoryId: 'food', date: '2026-01-15' },
+      ],
+      insightCategories,
+      new Date(2026, 0, 15)
+    );
+
+    expect(result).toEqual({
+      categories: [
+        { id: 'food', name: 'Food', icon: '🍽️', amount: 10.1, share: (10.1 / 30.1) * 100 },
+        { id: 'travel', name: 'Travel', icon: '🚗', amount: 0, share: 0 },
+        { id: 'uncategorized', name: 'Uncategorized', icon: '❔', amount: 20, share: (20 / 30.1) * 100 },
+      ],
+      total: 30.1,
+    });
+    expect(result.categories.reduce((sum, category) => sum + category.share, 0)).toBeCloseTo(100);
+  });
+
+  it('returns configured zero-spend categories and safe zero shares for an empty period', () => {
+    const result = getMonthToDateCategorySpending([], insightCategories, new Date(2026, 0, 15));
+
+    expect(result.total).toBe(0);
+    expect(result.categories).toEqual([
+      { id: 'food', name: 'Food', icon: '🍽️', amount: 0, share: 0 },
+      { id: 'travel', name: 'Travel', icon: '🚗', amount: 0, share: 0 },
+    ]);
+  });
+
+  it('calculates six monthly totals including zero months and current-month future dates', () => {
+    const result = getMonthlySpending(
+      [
+        { amount: 1.25, date: '2025-08-01' },
+        { amount: 2.75, date: '2025-08-31' },
+        { amount: 10, date: '2026-01-31' },
+        { amount: 100, date: '2026-02-01' },
+        { amount: 200, date: '2025-07-31' },
+        { amount: 300, date: '2025-09-31' },
+      ],
+      new Date(2026, 0, 15)
+    );
+
+    expect(result.map(({ key, amount }) => [key, amount])).toEqual([
+      ['2025-08', 4],
+      ['2025-09', 0],
+      ['2025-10', 0],
+      ['2025-11', 0],
+      ['2025-12', 0],
+      ['2026-01', 10],
+    ]);
+  });
+
+  it('retains very large finite amounts without overflowing during cent rounding', () => {
+    const result = getMonthToDateCategorySpending(
+      [{ amount: 1e308, categoryId: 'food', date: '2026-01-15' }],
+      insightCategories,
+      new Date(2026, 0, 15)
+    );
+
+    expect(result.categories[0].amount).toBe(1e308);
+    expect(result.total).toBe(1e308);
+    expect(Number.isFinite(result.categories[0].share)).toBe(true);
   });
 });
 

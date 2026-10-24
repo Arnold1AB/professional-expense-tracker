@@ -76,17 +76,27 @@ The **regression test** lives in `tests/regression/` and runs separately:
 npm run test:bug
 ```
 
-In the starter project this test **is expected to fail**. You will use it in the debugging exercise. Once the issue is fixed, it should pass, and `npm test` should still pass too.
+The regression test checks that the dashboard totals stay accurate and should pass alongside `npm test`.
 
 ## Features
 
 - **Dashboard**: total allocated budget, total expenses, remaining balance, and a breakdown of spending by category.
+- **Spending Insights**: a month-to-date category comparison and a six-month spending trend, with amounts and percentages shown in Nigerian Naira. Insights recalculate when expenses change and use the local calendar date.
 - **Category budgets**: six categories, each with an allocated budget, the amount spent, and the remaining balance. Click **Edit** to change a category's budget. The remaining balance can go negative when you overspend.
 - **Add expenses**: enter a description, amount, category, and date. The form checks that every field is valid.
 - **View expenses**: all expenses are listed newest first. Use the **Sort** menu to show oldest first, or to group them by category.
 - **Delete expenses**: click **Delete** on any expense and confirm.
 - **Saved automatically**: changes are kept in `localStorage`, so they survive a page refresh.
 - **Reset Demo Data**: restores the original sample data (see below).
+
+### Spending Insights screenshot
+
+The dashboard below shows the category comparison and six-month trend on
+desktop and mobile layouts.
+
+![Spending Insights dashboard at desktop width](docs/screenshots/spending-insights.png)
+
+![Spending Insights dashboard at mobile width](docs/screenshots/spending-insights-mobile.png)
 
 ### Sample data
 
@@ -120,7 +130,8 @@ If the page ever fails to load, you can also clear the data manually. Open your 
 │   ├── styles.css              # All application styles
 │   ├── components/
 │   │   ├── Header.jsx          # App title and subtitle
-│   │   ├── Dashboard.jsx       # Summary cards + spending breakdown
+│   │   ├── Dashboard.jsx       # Summary cards, breakdown + insights
+│   │   ├── SpendingInsights.jsx # Category comparison + monthly trend
 │   │   ├── SummaryCard.jsx     # One summary statistic card
 │   │   ├── CategoryBudgets.jsx # Category table with budget editing
 │   │   ├── ExpenseForm.jsx     # Add-expense form with validation

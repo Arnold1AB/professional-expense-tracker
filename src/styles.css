@@ -282,6 +282,151 @@ main.container {
   margin-right: 0;
 }
 
+/* ---------- Spending insights ---------- */
+
+.insights-section {
+  margin-top: 22px;
+}
+
+.insights-section > .card__title {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.insights-card {
+  min-width: 0;
+}
+
+.insights-card .card__title {
+  font-size: 0.98rem;
+}
+
+.insights-category-list {
+  display: grid;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.insights-category__details {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.insights-category__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.insights-category__values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.insights-category__values > span:first-child {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.insights-category__values > span:last-child {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.insights-bar-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9edf5;
+}
+
+.insights-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.insights-empty {
+  padding: 12px 0 20px;
+}
+
+.insights-month-scroll {
+  overflow-x: auto;
+}
+
+.insights-month-list {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+  width: 100%;
+  height: 214px;
+  margin: 0;
+  padding: 0 0 4px;
+  list-style: none;
+}
+
+.insights-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+  height: 100%;
+  text-align: center;
+}
+
+.insights-month__amount {
+  width: 100%;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.insights-month__track {
+  display: flex;
+  align-items: flex-end;
+  width: min(100%, 42px);
+  height: 120px;
+  overflow: hidden;
+  border-radius: 7px 7px 0 0;
+  background: #f0f1fa;
+}
+
+.insights-month__bar {
+  display: block;
+  width: 100%;
+  height: var(--bar-size);
+  border-radius: 7px 7px 0 0;
+  background: var(--color-teal);
+}
+
+.insights-month__label {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
 /* ---------- Tables ---------- */
 
 .data-table {
@@ -624,6 +769,10 @@ select[aria-invalid='true'] {
     grid-template-columns: 1fr;
   }
 
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+
   .breakdown-list {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -644,6 +793,48 @@ select[aria-invalid='true'] {
 
   .breakdown-list {
     grid-template-columns: 1fr;
+  }
+
+  .insights-card {
+    padding: 16px;
+  }
+
+  .insights-month-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    height: auto;
+  }
+
+  .insights-month {
+    display: grid;
+    grid-template-columns: minmax(64px, 76px) minmax(24px, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    height: auto;
+    text-align: left;
+  }
+
+  .insights-month__amount {
+    grid-column: 3;
+    grid-row: 1;
+    width: auto;
+    white-space: nowrap;
+    font-size: 0.72rem;
+  }
+
+  .insights-month__track {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+  }
+
+  .insights-month__bar {
+    width: var(--bar-size);
+    height: 100%;
+    border-radius: inherit;
   }
 
   /* Tables become stacked cards on small screens. */
